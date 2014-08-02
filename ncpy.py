@@ -97,7 +97,11 @@ class Bunny(object):
         return self.y, self.x
 
 
-            
+def print_len(snake, screen):
+    _, x = screen.getmaxyx()
+    x = x//2
+    screen.addstr(0, x, ' ' + ('000' + str(len(snake.pieces)))[-4:] + ' ')
+
 
 def keyloop(stdscr):
     try:
@@ -112,10 +116,12 @@ def keyloop(stdscr):
         BOARD = drawboard(stdscr)
         stdscr.refresh()
         stdscr.move(0,0)
+        print_len(snake, stdscr)
         snake.start()
         stdscr.nodelay(1)
         while True:
             snake.draw()
+            print_len(snake, stdscr)
             stdscr.move(0,0)
             stdscr.refresh()
             time.sleep(0.1)
