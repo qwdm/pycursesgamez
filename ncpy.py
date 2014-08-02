@@ -105,6 +105,7 @@ def print_len(snake, screen):
 
 def keyloop(stdscr):
     try:
+        curses.curs_set(0)
         bunny = Bunny(stdscr)
         snake = Snake(stdscr)
         snake.set_bunny(bunny)
