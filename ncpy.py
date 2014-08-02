@@ -6,7 +6,6 @@ import random
 from drawboard import drawboard
 
 BOARD = []
-BUNNY_EATEN = False
 
 class GameOver(Exception):
     pass
@@ -98,33 +97,6 @@ class Bunny(object):
         return self.y, self.x
 
 
-class Screen(object):
-    def __init__(self, screen):
-        self.screen = screen
-
-
-def InitPoint(screen):
-    class Point(object):
-        def __init__(self, y, x):
-            self.x = x
-            self.y = y
-
-        def pos(self):
-            return self.y, self.x
-
-        def addch(self, ch):
-            screen.addch(self.y, self.x, ch)
-
-        def clr(self):
-            screen.addch(self.y, self.x, ord(' '))
-
-        def up(self):    self.y -= 1
-        def left(self):  self.x -= 1
-        def right(self): self.x += 1
-        def down(self):  self.y += 1
-
-
-    return Point
             
 
 def keyloop(stdscr):
@@ -138,7 +110,6 @@ def keyloop(stdscr):
 
         global BOARD
         BOARD = drawboard(stdscr)
-#        Point = InitPoint(stdscr)
         stdscr.refresh()
         stdscr.move(0,0)
         snake.start()
@@ -166,11 +137,8 @@ def keyloop(stdscr):
         main(stdscr)
 
 
-    
-
 def main(stdscr):
     keyloop(stdscr)             
-
 
 
 if __name__ == '__main__':
