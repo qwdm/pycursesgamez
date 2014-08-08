@@ -63,7 +63,7 @@ class ReflectingPoint(object):
         
 
         main_angle = (A, B0, B1)
-        if all(self.native == x for x in main_angle):
+        if all(self.native == x or self.ch == x for x in main_angle):
             pass
         # хотябы один либо reflect, либо border, (либо игрок, но это позже)
         else:
@@ -96,10 +96,18 @@ class ReflectingPoint(object):
                 
 def reflect_test(stdscr):
     screen = Screen(stdscr)
-    point = ReflectingPoint(screen, 13, 15, SEE, (LAND, OVERBOARD))
+    point0 = ReflectingPoint(screen, 13, 15, SEE, (LAND, OVERBOARD))
+    point1 = ReflectingPoint(screen, 4, 7, SEE, (LAND, OVERBOARD))
+    point2 = ReflectingPoint(screen, 5, 7, SEE, (LAND, OVERBOARD))
+    point3 = ReflectingPoint(screen, 4, 13, SEE, (LAND, OVERBOARD))
+    point4 = ReflectingPoint(screen, 16, 20, SEE, (LAND, OVERBOARD))
     while True:
-        time.sleep(0.5)
-        point.move()
+        time.sleep(0.1)
+        point0.move()
+        point1.move()
+        point2.move()
+        point3.move()
+        point4.move()
         screen.refresh()
 
 if __name__ == '__main__':
