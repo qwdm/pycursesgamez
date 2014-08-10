@@ -3,6 +3,8 @@ import curses
 import random
 import time
 
+import sys
+sys.setrecursionlimit(10000)
 
 LAND = ord('S') # земля, нативная область для игрока
 SEE = ord(' ')  # море, область для захвата
@@ -10,6 +12,7 @@ OVERBOARD = -1  # guard для выхода за границу
 PLAYER = ord('*') # голова игрока
 TRACK = ord('+')  # шлейф на море
 SEEMONSTER = ord('O')
+
 
 class State(object):
     def __init__(self, state=None):
@@ -37,6 +40,8 @@ class Screen(object):
         self.maxX = x
         self.maxY = y
         self.scr.nodelay(1)
+
+        self.monsters = []
         
 
     def set(self, ch, x, y):
@@ -71,6 +76,36 @@ class Screen(object):
     def getch(self):
         return self.scr.getch()
 
+    def make_see(self, positions):
+        for p in positions:
+            self.set(SEE, *p)
+        self.refresh()
+
+    def fill_new_land(self):
+        def fill_0(x, y): # заполонить символом 'A' все, куда достают монстры
+            val = self.matrix[x][y]
+            if val == SEE or val == SEEMONSTER:
+                if val != SEEMONSTER:
+                    self.set('A', x, y)
+                fill_0(x, y+1)
+                fill_0(x, y-1)
+                fill_0(x+1, y)
+                fill_0(x-1, y)
+
+        for m in self.monsters:
+            fill_0(*m.pos)
+
+        for i in range(self.maxX):
+            for j in range(self.maxY):
+                if self.matrix[i][j] == SEE:
+                    self.set(LAND, i, j)
+                elif self.matrix[i][j] == 'A':
+                    self.set(SEE, i, j)
+
+        self.refresh()
+        
+
+
 
 
 class ReflectingPoint(object):
@@ -101,7 +136,10 @@ class ReflectingPoint(object):
             pass
         # хотябы один либо reflect, либо border, (либо игрок, но это позже)
         elif any(x == TRACK or x == PLAYER for x in main_angle):
-            pass
+            if STATE.state == LAND:
+                pass
+            else:
+                STATE.state = 'loose'
         else:
             newvels = [( self.vel[0], -self.vel[1]),
                        (-self.vel[0],  self.vel[1]),
@@ -139,7 +177,19 @@ class Player(object):
 
         self.state = LAND
 
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, val):
+        self._state = val
+        STATE.state = val
+
+
     def move(self, direction):
+        if STATE.state == 'loose':
+            self.loose_back()
         init_pos = self.pos[:]
         if self.state == LAND:
             self.screen.set(LAND, *self.pos)
@@ -163,12 +213,29 @@ class Player(object):
         val = self.screen.get(*self.pos)
         if val == SEE and self.state == LAND:
             self.state = SEE
+            self.see_start = init_pos # при попадании врага, оказываемся там 
+            self.track = [self.pos[:]] 
         elif val == LAND and self.state == SEE:
             self.state = LAND
-        elif val == SEEMONSTER:
-            pass # TODO event: loose
+            self.fill_new_land()
+        elif val == SEEMONSTER or val == TRACK:
+            self.loose_back()
+
+        if val == SEE and self.state == SEE:
+            self.track.append(self.pos[:])
+
 
         self.screen.set(PLAYER, *self.pos)
+
+    def loose_back(self):
+        self.state = LAND
+        self.screen.make_see(self.track)
+        self.pos = self.see_start[:]
+
+    def fill_new_land(self):
+        for p in self.track:
+            self.screen.set(LAND, *p)
+        self.screen.fill_new_land()
                 
 
 def init_reflectors(screen):
@@ -202,12 +269,15 @@ def main(stdscr):
     screen = Screen(stdscr)
     screen.fill_init()
     reflectors = init_reflectors(screen)
+    screen.monsters = reflectors
     player = Player(screen, 0,0)
     while True:
         for r in reflectors:
             r.move()
         screen.refresh()   
-        time.sleep(0.1)
+        if STATE.state == 'loose':
+            player.loose_back()
+        time.sleep(0.04)
         c = screen.getch()
         while screen.getch() != -1:
             pass
