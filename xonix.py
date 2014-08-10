@@ -11,6 +11,20 @@ PLAYER = ord('*') # голова игрока
 TRACK = ord('+')  # шлейф на море
 SEEMONSTER = ord('O')
 
+class State(object):
+    def __init__(self, state=None):
+        self._state = state 
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, state):
+        self._state = state
+
+STATE = State()
+
 
 class Screen(object):
     def __init__(self, stdscreen):
@@ -86,6 +100,8 @@ class ReflectingPoint(object):
                for x in main_angle):
             pass
         # хотябы один либо reflect, либо border, (либо игрок, но это позже)
+        elif any(x == TRACK or x == PLAYER for x in main_angle):
+            pass
         else:
             newvels = [( self.vel[0], -self.vel[1]),
                        (-self.vel[0],  self.vel[1]),
